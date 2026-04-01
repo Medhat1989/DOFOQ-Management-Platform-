@@ -1,0 +1,128 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    // Workspace: { name: string, ownerId: string, members: string[] }
+    // Space: { workspaceId: string, name: string, icon: string, color: string }
+    // Board: { spaceId: string, name: string, type: string, description: string, columns: list }
+    // Group: { boardId: string, name: string, color: string, order: number }
+    // Item: { groupId: string, boardId: string, name: string, values: map, order: number, assignees: list }
+    // Update: { itemId: string, authorId: string, content: string, createdAt: timestamp }
+    // User: { uid: string, email: string, companyName: string, industry: string, companySize: string, sectionsToManage: list, onboardingCompleted: bool, createdAt: timestamp }
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isWorkspaceMember(workspaceId) {
+      return isAuthenticated() && (
+        get(/databases/$(database)/documents/workspaces/$(workspaceId)).data.ownerId == request.auth.uid ||
+        request.auth.uid in get(/databases/$(database)/documents/workspaces/$(workspaceId)).data.members
+      );
+    }
+
+    function isWorkspaceOwner(workspaceId) {
+      return isAuthenticated() && get(/databases/$(database)/documents/workspaces/$(workspaceId)).data.ownerId == request.auth.uid;
+    }
+
+    function isValidWorkspace(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.ownerId == request.auth.uid;
+    }
+
+    function isValidSpace(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.workspaceId is string;
+    }
+
+    function isValidBoard(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.spaceId is string &&
+             data.type in ['task', 'crm', 'sprint', 'form', 'blank'];
+    }
+
+    function isValidGroup(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.boardId is string &&
+             data.order is number;
+    }
+
+    function isValidItem(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() < 255 &&
+             data.boardId is string &&
+             data.groupId is string &&
+             data.order is number;
+    }
+
+    function isValidUpdate(data) {
+      return data.content is string && data.content.size() > 0 && data.content.size() < 5000 &&
+             data.itemId is string &&
+             data.authorId == request.auth.uid;
+    }
+
+    function isValidUser(data) {
+      return data.uid == request.auth.uid &&
+             data.email is string &&
+             data.companyName is string && data.companyName.size() > 0 && data.companyName.size() < 100 &&
+             data.onboardingCompleted is bool;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow create: if isAuthenticated() && request.auth.uid == userId && isValidUser(request.resource.data);
+      allow update: if isAuthenticated() && request.auth.uid == userId && isValidUser(request.resource.data);
+    }
+
+    match /workspaces/{workspaceId} {
+      allow read: if isAuthenticated() && (resource.data.ownerId == request.auth.uid || request.auth.uid in resource.data.members);
+      allow create: if isAuthenticated() && isValidWorkspace(request.resource.data);
+      allow update: if isWorkspaceOwner(workspaceId) && isValidWorkspace(request.resource.data);
+      allow delete: if isWorkspaceOwner(workspaceId);
+
+      match /spaces/{spaceId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create: if isWorkspaceMember(workspaceId) && isValidSpace(request.resource.data);
+        allow update: if isWorkspaceMember(workspaceId) && isValidSpace(request.resource.data);
+        allow delete: if isWorkspaceMember(workspaceId);
+      }
+
+      match /boards/{boardId} {
+        allow read: if isWorkspaceMember(workspaceId);
+        allow create: if isWorkspaceMember(workspaceId) && isValidBoard(request.resource.data);
+        allow update: if isWorkspaceMember(workspaceId) && isValidBoard(request.resource.data);
+        allow delete: if isWorkspaceMember(workspaceId);
+
+        match /groups/{groupId} {
+          allow read: if isWorkspaceMember(workspaceId);
+          allow create: if isWorkspaceMember(workspaceId) && isValidGroup(request.resource.data);
+          allow update: if isWorkspaceMember(workspaceId) && isValidGroup(request.resource.data);
+          allow delete: if isWorkspaceMember(workspaceId);
+        }
+
+        match /items/{itemId} {
+          allow read: if isWorkspaceMember(workspaceId);
+          allow create: if isWorkspaceMember(workspaceId) && isValidItem(request.resource.data);
+          allow update: if isWorkspaceMember(workspaceId) && isValidItem(request.resource.data);
+          allow delete: if isWorkspaceMember(workspaceId);
+
+          match /updates/{updateId} {
+            allow read: if isWorkspaceMember(workspaceId);
+            allow create: if isWorkspaceMember(workspaceId) && isValidUpdate(request.resource.data);
+            allow update: if isWorkspaceMember(workspaceId) && request.auth.uid == resource.data.authorId && isValidUpdate(request.resource.data);
+            allow delete: if isWorkspaceMember(workspaceId) && (request.auth.uid == resource.data.authorId || isWorkspaceOwner(workspaceId));
+          }
+        }
+      }
+    }
+  }
+}

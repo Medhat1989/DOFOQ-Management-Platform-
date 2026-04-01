@@ -1,0 +1,103 @@
+{
+  "entities": {
+    "Workspace": {
+      "title": "Workspace",
+      "description": "The top-level organizational unit.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "The name of the workspace." },
+        "ownerId": { "type": "string", "description": "The UID of the workspace owner." },
+        "members": { "type": "array", "items": { "type": "string" }, "description": "List of member UIDs." }
+      },
+      "required": ["name", "ownerId"]
+    },
+    "Space": {
+      "title": "Space",
+      "description": "A department or team within a workspace.",
+      "type": "object",
+      "properties": {
+        "workspaceId": { "type": "string", "description": "The ID of the parent workspace." },
+        "name": { "type": "string", "description": "The name of the space." },
+        "icon": { "type": "string", "description": "Emoji or icon name." },
+        "color": { "type": "string", "description": "Hex color code." }
+      },
+      "required": ["workspaceId", "name"]
+    },
+    "Board": {
+      "title": "Board",
+      "description": "A project or process board.",
+      "type": "object",
+      "properties": {
+        "spaceId": { "type": "string", "description": "The ID of the parent space." },
+        "name": { "type": "string", "description": "The name of the board." },
+        "type": { "type": "string", "enum": ["task", "crm", "sprint", "form", "blank"] },
+        "description": { "type": "string" },
+        "columns": { "type": "array", "items": { "type": "object" }, "description": "Column definitions." }
+      },
+      "required": ["spaceId", "name", "type"]
+    },
+    "Group": {
+      "title": "Group",
+      "description": "A section within a board.",
+      "type": "object",
+      "properties": {
+        "boardId": { "type": "string", "description": "The ID of the parent board." },
+        "name": { "type": "string" },
+        "color": { "type": "string" },
+        "order": { "type": "number" }
+      },
+      "required": ["boardId", "name", "order"]
+    },
+    "Item": {
+      "title": "Item",
+      "description": "A task or record.",
+      "type": "object",
+      "properties": {
+        "groupId": { "type": "string" },
+        "boardId": { "type": "string" },
+        "name": { "type": "string" },
+        "values": { "type": "object", "description": "Column values keyed by column ID." },
+        "order": { "type": "number" },
+        "assignees": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["groupId", "boardId", "name", "order"]
+    },
+    "Update": {
+      "title": "Update",
+      "description": "A comment or activity log on an item.",
+      "type": "object",
+      "properties": {
+        "itemId": { "type": "string" },
+        "authorId": { "type": "string" },
+        "content": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["itemId", "authorId", "content", "createdAt"]
+    },
+    "User": {
+      "title": "User",
+      "description": "User profile and onboarding information.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "companyName": { "type": "string" },
+        "industry": { "type": "string" },
+        "companySize": { "type": "string" },
+        "sectionsToManage": { "type": "array", "items": { "type": "string" } },
+        "onboardingCompleted": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "companyName", "onboardingCompleted"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": { "schema": "User", "description": "User profiles" },
+    "/workspaces/{workspaceId}": { "schema": "Workspace", "description": "Workspaces collection" },
+    "/workspaces/{workspaceId}/spaces/{spaceId}": { "schema": "Space", "description": "Spaces within a workspace" },
+    "/workspaces/{workspaceId}/boards/{boardId}": { "schema": "Board", "description": "Boards within a workspace" },
+    "/workspaces/{workspaceId}/boards/{boardId}/groups/{groupId}": { "schema": "Group", "description": "Groups within a board" },
+    "/workspaces/{workspaceId}/boards/{boardId}/items/{itemId}": { "schema": "Item", "description": "Items within a board" },
+    "/workspaces/{workspaceId}/boards/{boardId}/items/{itemId}/updates/{updateId}": { "schema": "Update", "description": "Updates on an item" }
+  }
+}
