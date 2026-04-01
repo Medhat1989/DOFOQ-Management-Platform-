@@ -2,6 +2,7 @@ import React from 'react';
 import { auth } from './firebase';
 import { Auth } from './components/Auth';
 import { Onboarding } from './components/Onboarding';
+import { SplashScreen } from './components/SplashScreen';
 import { Sidebar } from './components/Sidebar';
 import { BoardView } from './components/BoardView';
 import { boardService } from './services/boardService';
@@ -18,16 +19,19 @@ import {
   HelpCircle, 
   Heart, 
   Grid,
-  User
+  User,
+  LogOut
 } from 'lucide-react';
 import { AISidekick } from './components/AISidekick';
 import { collection, addDoc, serverTimestamp, doc, getDoc } from 'firebase/firestore';
 import { db } from './firebase';
+import { signOut } from 'firebase/auth';
 
 export default function App() {
   const [user, setUser] = React.useState(auth.currentUser);
   const [isAuthReady, setIsAuthReady] = React.useState(false);
   const [isBootstrapping, setIsBootstrapping] = React.useState(false);
+  const [showSplash, setShowSplash] = React.useState(true);
   const [userProfile, setUserProfile] = React.useState<UserProfile | null>(null);
   const [isLoadingProfile, setIsLoadingProfile] = React.useState(true);
   
@@ -200,6 +204,18 @@ export default function App() {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error('Logout failed', error);
+    }
+  };
+
+  if (showSplash) {
+    return <SplashScreen onComplete={() => setShowSplash(false)} />;
+  }
+
   if (!isAuthReady) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-slate-50">
@@ -254,6 +270,13 @@ export default function App() {
             <button className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-500"><HelpCircle className="w-5 h-5" /></button>
             <button className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-500"><Heart className="w-5 h-5" /></button>
             <button className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-500"><Grid className="w-5 h-5" /></button>
+            <button 
+              onClick={handleLogout}
+              className="p-1.5 hover:bg-red-50 rounded-lg text-slate-500 hover:text-red-600 transition-colors"
+              title="Logout"
+            >
+              <LogOut className="w-5 h-5" />
+            </button>
             <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-white ml-2 cursor-pointer border-2 border-white shadow-sm">
               <User className="w-5 h-5" />
             </div>

@@ -134,9 +134,15 @@ export function Onboarding({ onComplete }: OnboardingProps) {
             exit={{ opacity: 0, x: -20 }}
             className="space-y-6"
           >
-            <div className="text-center mb-8">
+            <div className="text-center mb-8 flex flex-col items-center">
+              <img 
+                src="https://i.ibb.co/k2nBDqYK/Black-and-Gold-Elegant-Florist-Business-Card-4-removebg-preview.png" 
+                alt="Logo" 
+                className="w-24 h-24 object-contain mb-4"
+                referrerPolicy="no-referrer"
+              />
               <h1 className="text-4xl font-bold text-slate-900 mb-2">Welcome</h1>
-              <p className="text-slate-500 text-lg">Let's get your company set up</p>
+              <p className="text-slate-500 text-lg">Let's get your Dar Al-Ofoq experience set up</p>
             </div>
             <div className="space-y-4">
               <div className="relative">

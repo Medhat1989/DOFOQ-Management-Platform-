@@ -67,8 +67,16 @@ export function Auth() {
     <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 p-6">
       <div className="w-full max-w-md p-8 bg-white rounded-2xl shadow-xl border border-slate-200">
         <div className="flex flex-col items-center gap-4 mb-8">
-          <h1 className="text-4xl font-bold text-slate-900 tracking-tight">Welcome</h1>
-          <p className="text-slate-500 text-center">Sign in to access your work platform</p>
+          <img 
+            src="https://i.ibb.co/k2nBDqYK/Black-and-Gold-Elegant-Florist-Business-Card-4-removebg-preview.png" 
+            alt="Logo" 
+            className="w-32 h-32 object-contain"
+            referrerPolicy="no-referrer"
+          />
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight text-center">
+            Welcome to Dar Al-Ofoq Platform
+          </h1>
+          <p className="text-slate-500 text-center text-sm">Sign in to access your work platform</p>
         </div>
         
         <form onSubmit={handleLogin} className="space-y-4">
